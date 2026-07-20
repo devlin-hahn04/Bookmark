@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from "react";
-// import { base44 } from "@/api/base44Client";  // COMMENTED OUT - File missing
 import { Search, Plus, Bookmark as BookmarkIcon } from "lucide-react";
 import { Sidebar, BookmarkCard, BookmarkModal } from "@/components/BookmarkUI";
+import { storage } from '@/lib/storage';
+
+const BOOKMARKS_KEY = 'bookmarks';
+const CATEGORIES_KEY = 'categories';
 
 export default function Home() {
   const [bookmarks, setBookmarks] = useState([]);
@@ -13,24 +16,12 @@ export default function Home() {
   const [editing, setEditing] = useState(null);
 
   const load = async () => {
-    // COMMENTED OUT - base44 missing
-    // const [bk, cats] = await Promise.all([
-    //   base44.entities.Bookmark.list("-created_date"),
-    //   base44.entities.Category.list("name"),
-    // ]);
-    // setBookmarks(bk);
-    // setCategories(cats);
-    // setLoading(false);
-    
-    // TEMPORARY: Use mock data instead
-    setBookmarks([
-      { id: 1, title: "Google", url: "https://google.com", description: "Search engine", category_id: null },
-      { id: 2, title: "GitHub", url: "https://github.com", description: "Code hosting", category_id: null },
+    const [bookmarks, categories] = await Promise.all([
+      storage.get(BOOKMARKS_KEY),
+      storage.get(CATEGORIES_KEY),
     ]);
-    setCategories([
-      { id: 1, name: "Work" },
-      { id: 2, name: "Personal" },
-    ]);
+    setBookmarks(bookmarks || []);
+    setCategories(categories || []);
     setLoading(false);
   };
 
@@ -52,43 +43,41 @@ export default function Home() {
   const catMap = Object.fromEntries(categories.map((c) => [c.id, c]));
 
   const handleSaveBookmark = async (data) => {
-    // COMMENTED OUT - base44 missing
-    // if (data.id) {
-    //   await base44.entities.Bookmark.update(data.id, {
-    //     title: data.title, url: data.url, description: data.description, category_id: data.category_id || null,
-    //   });
-    // } else {
-    //   await base44.entities.Bookmark.create({
-    //     title: data.title, url: data.url, description: data.description, category_id: data.category_id || null,
-    //   });
-    // }
-    // setModalOpen(false);
-    // setEditing(null);
-    // load();
-    
-    // TEMPORARY: Just close modal
+    const bookmarks = await storage.get(BOOKMARKS_KEY) || [];
+    if (data.id) {
+      const idx = bookmarks.findIndex(b => b.id === data.id);
+      if (idx >= 0) bookmarks[idx] = data;
+    } else {
+      bookmarks.unshift({ 
+        ...data, 
+        id: Date.now(), 
+        created_date: new Date().toISOString() 
+      });
+    }
+    await storage.set(BOOKMARKS_KEY, bookmarks);
     setModalOpen(false);
     setEditing(null);
-    alert('Bookmark saved (demo mode - base44 API not configured)');
+    load();
   };
 
   const handleDeleteBookmark = async (id) => {
-    // await base44.entities.Bookmark.delete(id);
-    // load();
-    alert('Delete bookmark (demo mode - base44 API not configured)');
+    const bookmarks = (await storage.get(BOOKMARKS_KEY) || []).filter(b => b.id !== id);
+    await storage.set(BOOKMARKS_KEY, bookmarks);
+    load();
   };
 
   const handleAddCategory = async (cat) => {
-    // await base44.entities.Category.create(cat);
-    // load();
-    alert('Add category (demo mode - base44 API not configured)');
+    const categories = await storage.get(CATEGORIES_KEY) || [];
+    categories.push({ ...cat, id: Date.now() });
+    await storage.set(CATEGORIES_KEY, categories);
+    load();
   };
 
   const handleDeleteCategory = async (id) => {
-    // await base44.entities.Category.delete(id);
-    // if (activeCategory === id) setActiveCategory(null);
-    // load();
-    alert('Delete category (demo mode - base44 API not configured)');
+    const categories = (await storage.get(CATEGORIES_KEY) || []).filter(c => c.id !== id);
+    await storage.set(CATEGORIES_KEY, categories);
+    if (activeCategory === id) setActiveCategory(null);
+    load();
   };
 
   if (loading) {
