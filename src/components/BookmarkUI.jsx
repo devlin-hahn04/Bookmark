@@ -130,8 +130,14 @@ export function BookmarkCard({ bookmark, category, onEdit, onDelete }) {
             <Globe size={16} className="text-[rgba(255,255,255,0.4)]" style={{ display: faviconUrl ? 'none' : 'block' }} />
           </div>
           <div className="min-w-0">
-            <h3 className="text-sm font-semibold text-white truncate">{bookmark.title}</h3>
-            <p className="text-[11px] font-mono text-[rgba(255,255,255,0.3)] truncate">{bookmark.url?.replace(/^https?:\/\//, '')}</p>
+            <a
+              href={bookmark.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm font-semibold text-white truncate hover:text-[#A78BFA] transition-colors block"
+            >
+              {bookmark.title}
+            </a>
           </div>
         </div>
         {category && (
@@ -153,15 +159,7 @@ export function BookmarkCard({ bookmark, category, onEdit, onDelete }) {
         </p>
       )}
 
-      <div className="flex items-center justify-between mt-auto pt-1">
-        <a
-          href={bookmark.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-[11px] font-mono text-[#6EE7B7] hover:text-[#A78BFA] transition-colors truncate max-w-[70%]"
-        >
-          URL: {bookmark.url?.replace(/^https?:\/\//, '')}
-        </a>
+      <div className="flex items-center justify-end mt-auto pt-1">
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
           <button onClick={() => onEdit(bookmark)} className="p-1.5 rounded-lg text-[rgba(255,255,255,0.4)] hover:text-white hover:bg-[rgba(255,255,255,0.08)] transition-all">
             <Pencil size={13} />
@@ -175,7 +173,7 @@ export function BookmarkCard({ bookmark, category, onEdit, onDelete }) {
   );
 }
 
-export function BookmarkModal({ open, onClose, onSave, categories, editingBookmark }) {
+export function BookmarkModal({ open, onClose, onSave, categories, editingBookmark, activeCategory }) {
   const [form, setForm] = useState({ title: "", url: "", description: "", category_id: "" });
 
   useEffect(() => {
@@ -187,9 +185,9 @@ export function BookmarkModal({ open, onClose, onSave, categories, editingBookma
         category_id: editingBookmark.category_id || "",
       });
     } else {
-      setForm({ title: "", url: "", description: "", category_id: "" });
+      setForm({ title: "", url: "", description: "", category_id: activeCategory || "" });
     }
-  }, [editingBookmark, open]);
+  }, [editingBookmark, open, activeCategory]);
 
   if (!open) return null;
 
