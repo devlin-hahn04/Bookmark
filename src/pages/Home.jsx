@@ -150,6 +150,7 @@ export default function Home() {
         onSave={handleSaveBookmark}
         categories={categories}
         editingBookmark={editing}
+        activeCategory={activeCategory}
       />
     </div>
   );
